@@ -2,7 +2,7 @@ use crate::io_source::IoSource;
 use crate::net::{SocketAddr, UnixStream};
 use crate::{event, sys, Interest, Registry, Token};
 
-use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd, RawFd};
+use std::os::unix::io::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};
 use std::os::unix::net;
 use std::path::Path;
 use std::{fmt, io};
@@ -100,5 +100,33 @@ impl FromRawFd for UnixListener {
     /// non-blocking mode.
     unsafe fn from_raw_fd(fd: RawFd) -> UnixListener {
         UnixListener::from_std(FromRawFd::from_raw_fd(fd))
+    }
+}
+
+impl AsFd for UnixListener {
+    #[inline]
+    fn as_fd(&self) -> BorrowedFd<'_> {
+        self.inner.as_fd()
+    }
+}
+
+impl From<UnixListener> for OwnedFd {
+    #[inline]
+    fn from(unix_listener: UnixListener) -> OwnedFd {
+        unsafe { OwnedFd::from_raw_fd(unix_listener.into_raw_fd()) }
+    }
+}
+
+impl From<OwnedFd> for UnixListener {
+    /// Converts a `OwnedFd` to a `UnixListener`.
+    ///
+    /// # Notes
+    ///
+    /// The caller is responsible for ensuring that the socket is in
+    /// non-blocking mode.
+    ///
+    #[inline]
+    fn from(owned: OwnedFd) -> Self {
+        unsafe { Self::from_raw_fd(owned.into_raw_fd()) }
     }
 }

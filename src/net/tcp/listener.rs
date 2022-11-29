@@ -1,8 +1,8 @@
 use std::net::{self, SocketAddr};
 #[cfg(unix)]
-use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd, RawFd};
+use std::os::unix::io::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};
 #[cfg(target_os = "wasi")]
-use std::os::wasi::io::{AsRawFd, FromRawFd, IntoRawFd, RawFd};
+use std::os::wasi::io::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};
 #[cfg(windows)]
 use std::os::windows::io::{AsRawSocket, FromRawSocket, IntoRawSocket, RawSocket};
 use std::{fmt, io};
@@ -244,5 +244,33 @@ impl FromRawFd for TcpListener {
     /// non-blocking mode.
     unsafe fn from_raw_fd(fd: RawFd) -> TcpListener {
         TcpListener::from_std(FromRawFd::from_raw_fd(fd))
+    }
+}
+
+impl AsFd for TcpListener {
+    #[inline]
+    fn as_fd(&self) -> BorrowedFd<'_> {
+        self.inner.as_fd()
+    }
+}
+
+impl From<TcpListener> for OwnedFd {
+    #[inline]
+    fn from(tcp_listener: TcpListener) -> OwnedFd {
+        unsafe { OwnedFd::from_raw_fd(tcp_listener.into_raw_fd()) }
+    }
+}
+
+impl From<OwnedFd> for TcpListener {
+    /// Converts a `OwnedFd` to a `TcpListener`.
+    ///
+    /// # Notes
+    ///
+    /// The caller is responsible for ensuring that the socket is in
+    /// non-blocking mode.
+    ///
+    #[inline]
+    fn from(owned: OwnedFd) -> Self {
+        unsafe { Self::from_raw_fd(owned.into_raw_fd()) }
     }
 }
