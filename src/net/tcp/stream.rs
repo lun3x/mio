@@ -2,9 +2,9 @@ use std::fmt;
 use std::io::{self, IoSlice, IoSliceMut, Read, Write};
 use std::net::{self, Shutdown, SocketAddr};
 #[cfg(unix)]
-use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd, RawFd};
+use std::os::unix::io::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};
 #[cfg(target_os = "wasi")]
-use std::os::wasi::io::{AsRawFd, FromRawFd, IntoRawFd, RawFd};
+use std::os::wasi::io::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};
 #[cfg(windows)]
 use std::os::windows::io::{AsRawSocket, FromRawSocket, IntoRawSocket, RawSocket};
 
@@ -423,5 +423,33 @@ impl FromRawFd for TcpStream {
     /// non-blocking mode.
     unsafe fn from_raw_fd(fd: RawFd) -> TcpStream {
         TcpStream::from_std(FromRawFd::from_raw_fd(fd))
+    }
+}
+
+impl AsFd for TcpStream {
+    #[inline]
+    fn as_fd(&self) -> BorrowedFd<'_> {
+        self.inner.as_fd()
+    }
+}
+
+impl From<TcpStream> for OwnedFd {
+    #[inline]
+    fn from(tcp_stream: TcpStream) -> OwnedFd {
+        unsafe { OwnedFd::from_raw_fd(tcp_stream.into_raw_fd()) }
+    }
+}
+
+impl From<OwnedFd> for TcpStream {
+    /// Converts a `OwnedFd` to a `TcpStream`.
+    ///
+    /// # Notes
+    ///
+    /// The caller is responsible for ensuring that the socket is in
+    /// non-blocking mode.
+    ///
+    #[inline]
+    fn from(owned: OwnedFd) -> Self {
+        unsafe { Self::from_raw_fd(owned.into_raw_fd()) }
     }
 }

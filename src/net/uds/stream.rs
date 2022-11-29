@@ -4,7 +4,7 @@ use crate::{event, sys, Interest, Registry, Token};
 use std::fmt;
 use std::io::{self, IoSlice, IoSliceMut, Read, Write};
 use std::net::Shutdown;
-use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd, RawFd};
+use std::os::unix::io::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};
 use std::os::unix::net;
 use std::path::Path;
 
@@ -247,7 +247,7 @@ impl FromRawFd for UnixStream {
 impl AsFd for UnixStream {
     #[inline]
     fn as_fd(&self) -> BorrowedFd<'_> {
-        self.0.as_fd()
+        self.inner.as_fd()
     }
 }
 
