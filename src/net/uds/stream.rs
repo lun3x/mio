@@ -243,3 +243,31 @@ impl FromRawFd for UnixStream {
         UnixStream::from_std(FromRawFd::from_raw_fd(fd))
     }
 }
+
+impl AsFd for UnixStream {
+    #[inline]
+    fn as_fd(&self) -> BorrowedFd<'_> {
+        self.0.as_fd()
+    }
+}
+
+impl From<UnixStream> for OwnedFd {
+    #[inline]
+    fn from(unix_stream: UnixStream) -> OwnedFd {
+        unsafe { OwnedFd::from_raw_fd(unix_stream.into_raw_fd()) }
+    }
+}
+
+impl From<OwnedFd> for UnixStream {
+    /// Converts a `OwnedFd` to a `UnixStream`.
+    ///
+    /// # Notes
+    ///
+    /// The caller is responsible for ensuring that the socket is in
+    /// non-blocking mode.
+    ///
+    #[inline]
+    fn from(owned: OwnedFd) -> Self {
+        unsafe { Self::from_raw_fd(owned.into_raw_fd()) }
+    }
+}
