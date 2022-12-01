@@ -116,7 +116,7 @@ impl Selector {
     }
 
     pub fn register(&self, fd: RawFd, token: Token, interests: Interest) -> io::Result<()> {
-        let flags = libc::EV_RECEIPT | libc::EV_ADD;
+        let flags = libc::EV_CLEAR | libc::EV_RECEIPT | libc::EV_ADD;
         // At most we need two changes, but maybe we only need 1.
         let mut changes: [MaybeUninit<libc::kevent>; 2] =
             [MaybeUninit::uninit(), MaybeUninit::uninit()];
@@ -155,7 +155,7 @@ impl Selector {
     }
 
     pub fn reregister(&self, fd: RawFd, token: Token, interests: Interest) -> io::Result<()> {
-        let flags = libc::EV_RECEIPT;
+        let flags = libc::EV_CLEAR | libc::EV_RECEIPT;
         let write_flags = if interests.is_writable() {
             flags | libc::EV_ADD
         } else {
@@ -214,7 +214,7 @@ impl Selector {
         let mut kevent = kevent!(
             0,
             libc::EVFILT_USER,
-            libc::EV_ADD | libc::EV_RECEIPT,
+            libc::EV_ADD | libc::EV_CLEAR | libc::EV_RECEIPT,
             token.0
         );
 
