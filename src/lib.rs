@@ -1,4 +1,7 @@
-#![feature(tcp_quickack)]
+#![cfg_attr(
+    any(target_os = "android", target_os = "linux",),
+    feature(tcp_quickack)
+)]
 #![deny(
     missing_docs,
     missing_debug_implementations,
