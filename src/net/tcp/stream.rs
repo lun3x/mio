@@ -12,6 +12,8 @@ use crate::io_source::IoSource;
 #[cfg(not(target_os = "wasi"))]
 use crate::sys::tcp::{connect, new_for_addr};
 use crate::{event, Interest, Registry, Token};
+#[cfg(any(target_os = "android", target_os = "linux",))]
+use std::os::linux::net::TcpStreamExt;
 
 /// A non-blocking TCP stream between a local socket and a remote socket.
 ///
