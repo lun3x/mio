@@ -154,7 +154,7 @@ impl TcpStream {
 
     #[cfg(any(target_os = "android", target_os = "linux",))]
     pub fn quickack(&self) -> io::Result<bool> {
-        self.inner.quickack(nodelay)
+        self.inner.quickack()
     }
 
     /// Gets the value of the `TCP_NODELAY` option on this socket.
