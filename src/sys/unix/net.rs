@@ -26,17 +26,43 @@ pub(crate) fn new_socket(domain: libc::c_int, socket_type: libc::c_int) -> io::R
 
     let socket = syscall!(socket(domain, socket_type, 0))?;
 
+    #[cfg(any(target_os = "android", target_os = "linux"))]
+    {
+        if let Err(err) = syscall!(setsockopt(
+            socket,
+            libc::SOL_SOCKET,
+            libc::SO_REUSADDR,
+            &1 as *const libc::c_int as *const libc::c_void,
+            size_of::<libc::c_int>() as libc::socklen_t
+        )) {
+            let _ = syscall!(close(socket));
+            return Err(err);
+        }
+    }
+
     // Mimick `libstd` and set `SO_NOSIGPIPE` on apple systems.
     #[cfg(any(target_os = "ios", target_os = "macos"))]
-    if let Err(err) = syscall!(setsockopt(
-        socket,
-        libc::SOL_SOCKET,
-        libc::SO_NOSIGPIPE,
-        &1 as *const libc::c_int as *const libc::c_void,
-        size_of::<libc::c_int>() as libc::socklen_t
-    )) {
-        let _ = syscall!(close(socket));
-        return Err(err);
+    {
+        if let Err(err) = syscall!(setsockopt(
+            socket,
+            libc::SOL_SOCKET,
+            libc::SO_NOSIGPIPE,
+            &1 as *const libc::c_int as *const libc::c_void,
+            size_of::<libc::c_int>() as libc::socklen_t
+        )) {
+            let _ = syscall!(close(socket));
+            return Err(err);
+        }
+        if let Err(err) = syscall!(setsockopt(
+            socket,
+            libc::SOL_SOCKET,
+            libc::SO_REUSEPORT,
+            &1 as *const libc::c_int as *const libc::c_void,
+            size_of::<libc::c_int>() as libc::socklen_t
+        )) {
+            let _ = syscall!(close(socket));
+            return Err(err);
+        }
     }
 
     // Darwin doesn't have SOCK_NONBLOCK or SOCK_CLOEXEC.
