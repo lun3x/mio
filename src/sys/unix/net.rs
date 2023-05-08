@@ -31,7 +31,7 @@ pub(crate) fn new_socket(domain: libc::c_int, socket_type: libc::c_int) -> io::R
         if let Err(err) = syscall!(setsockopt(
             socket,
             libc::SOL_SOCKET,
-            libc::SO_REUSADDR,
+            libc::SO_REUSEADDR,
             &1 as *const libc::c_int as *const libc::c_void,
             size_of::<libc::c_int>() as libc::socklen_t
         )) {
