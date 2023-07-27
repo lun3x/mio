@@ -1,4 +1,7 @@
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(all(
+    not(mio_unsupported_force_waker_pipe),
+    any(target_os = "linux", target_os = "android")
+))]
 mod eventfd {
     use crate::sys::Selector;
     use crate::{Interest, Token};
@@ -55,10 +58,22 @@ mod eventfd {
     }
 }
 
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(all(
+    not(mio_unsupported_force_waker_pipe),
+    any(target_os = "linux", target_os = "android")
+))]
 pub use self::eventfd::Waker;
 
-#[cfg(any(target_os = "freebsd", target_os = "ios", target_os = "macos"))]
+#[cfg(all(
+    not(mio_unsupported_force_waker_pipe),
+    any(
+        target_os = "freebsd",
+        target_os = "ios",
+        target_os = "macos",
+        target_os = "tvos",
+        target_os = "watchos",
+    )
+))]
 mod kqueue {
     use crate::sys::Selector;
     use crate::Token;
@@ -90,10 +105,20 @@ mod kqueue {
     }
 }
 
-#[cfg(any(target_os = "freebsd", target_os = "ios", target_os = "macos"))]
+#[cfg(all(
+    not(mio_unsupported_force_waker_pipe),
+    any(
+        target_os = "freebsd",
+        target_os = "ios",
+        target_os = "macos",
+        target_os = "tvos",
+        target_os = "watchos",
+    )
+))]
 pub use self::kqueue::Waker;
 
 #[cfg(any(
+    mio_unsupported_force_waker_pipe,
     target_os = "dragonfly",
     target_os = "illumos",
     target_os = "netbsd",
@@ -164,6 +189,7 @@ mod pipe {
 }
 
 #[cfg(any(
+    mio_unsupported_force_waker_pipe,
     target_os = "dragonfly",
     target_os = "illumos",
     target_os = "netbsd",

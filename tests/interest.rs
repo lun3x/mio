@@ -30,11 +30,13 @@ fn fmt_debug() {
         target_os = "freebsd",
         target_os = "ios",
         target_os = "macos",
+        target_os = "tvos",
+        target_os = "watchos",
     ))]
     {
         assert_eq!(format!("{:?}", Interest::AIO), "AIO");
     }
-    #[cfg(any(target_os = "freebsd"))]
+    #[cfg(target_os = "freebsd")]
     {
         assert_eq!(format!("{:?}", Interest::LIO), "LIO");
     }
