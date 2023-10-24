@@ -134,6 +134,10 @@ impl UdpSocket {
         }
     }
 
+    pub fn to_std(self) -> net::UdpSocket {
+        self.inner.io
+    }
+
     /// Returns the socket address that this socket was created from.
     ///
     /// # Examples
