@@ -21,6 +21,8 @@ pub(crate) fn bind(socket: &net::TcpListener, addr: SocketAddr) -> io::Result<()
 }
 
 pub(crate) fn connect(socket: &net::TcpStream, addr: SocketAddr) -> io::Result<()> {
+    set_busy_poll(socket, 100);
+
     let (raw_addr, raw_addr_length) = socket_addr(&addr);
 
     match syscall!(connect(
@@ -36,6 +38,18 @@ pub(crate) fn connect(socket: &net::TcpStream, addr: SocketAddr) -> io::Result<(
 pub(crate) fn listen(socket: &net::TcpListener, backlog: u32) -> io::Result<()> {
     let backlog = backlog.try_into().unwrap_or(i32::max_value());
     syscall!(listen(socket.as_raw_fd(), backlog))?;
+    Ok(())
+}
+
+pub(crate) fn set_busy_poll(socket: &net::TcpStream, busy_poll: i32) -> io::Result<()> {
+    let val: libc::c_int = i32::from(busy_poll);
+    syscall!(setsockopt(
+        socket.as_raw_fd(),
+        libc::SOL_SOCKET,
+        libc::SO_BUSY_POLL,
+        &val as *const libc::c_int as *const libc::c_void,
+        size_of::<libc::c_int>() as libc::socklen_t,
+    ))?;
     Ok(())
 }
 
